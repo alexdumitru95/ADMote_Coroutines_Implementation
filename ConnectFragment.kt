@@ -75,19 +75,18 @@ class ConnectFragment : Fragment() {
         Log.d(TAG, "onDetach")
     }
 
-    @Suppress("DEPRECATION")
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val view: View = inflater.inflate(R.layout.fragment_connect, container, false)
         setHasOptionsMenu(true)
         retainInstance = true
-
         val toolbar: Toolbar? = activity?.findViewById(R.id.nav_action)
         toolbar?.setTitle(R.string.admote_control_title)
         toolbar?.setBackgroundColor(Color.parseColor("#161616"))
-
         adView = view.findViewById(R.id.adView)
 
+        // Google AdMob Consent preferences
         val consentStatus = ConsentInformation.getInstance(activity).consentStatus
         if (consentStatus.toString() == "NON_PERSONALIZED") {
             showNonPersonalizedAds()
@@ -95,9 +94,7 @@ class ConnectFragment : Fragment() {
             showPersonalizedAds()
         }
 
-
-        (activity as MainActivity).connectFragmentBlock()
-
+        // View elements
         IPAddress = view.findViewById(R.id.IPAddress)
         PortTCP = view.findViewById(R.id.PortTCP)
         connectButton = view.findViewById(R.id.connectButton)
@@ -106,18 +103,19 @@ class ConnectFragment : Fragment() {
         lastConnectionButton = view.findViewById(R.id.lastConnectionButton)
         ipAddressNA = view.findViewById(R.id.ipNotAvailable)
         portNumberNA = view.findViewById(R.id.portNotAvailable)
-        statusConexiune = view.findViewById(R.id.statusConexiune2)
+        connectionStatus = view.findViewById(R.id.connectionStatus)
         wifiStatus = view.findViewById(R.id.wifidisonnected)
 
 
         val officialwebsite = view.findViewById<TextView>(R.id.officialwebsite)
         val websitehelp = view.findViewById<TextView>(R.id.websitehelp)
 
-        val ultimeleDetaliiConexiune = getultimeleDetaliiConexiune()
-        ipAddressNA.text = ultimeleDetaliiConexiune[0]
-        portNumberNA.text = ultimeleDetaliiConexiune[1]
+        val lastConnectionDetails = getlastConnectionDetails()
+        ipAddressNA.text = lastConnectionDetails[0]
+        portNumberNA.text = lastConnectionDetails[1]
 
 
+        // Click listener for displaying official website
         officialwebsite.setOnClickListener {
             if (resources.configuration.locale.language == "ro") {
                 val uri = Uri.parse("https://admotecontrol.com/ro")
@@ -158,6 +156,7 @@ class ConnectFragment : Fragment() {
             }
         }
 
+         // Click listener for displaying help website
         websitehelp.setOnClickListener {
             if (resources.configuration.locale.language == "ro") {
                 val uri = Uri.parse("https://admotecontrol.com/ro/ajutor")
@@ -199,6 +198,7 @@ class ConnectFragment : Fragment() {
         }
 
 
+        // Settings some rules for the view to update when connection is/is not available
         if (clientSocket != null) {
             connectButton.setText(R.string.conectat_cu_succes)
             connectButton.isEnabled = false
@@ -225,11 +225,12 @@ class ConnectFragment : Fragment() {
             PortTCP.isEnabled = true
         }
 
+        // connectButton onClickListener
         connectButton.setOnClickListener {
             connectionConfirmation()
         }
 
-
+        // disconnectButton onClickListenr
         disconnectButton.setOnClickListener {
             try {
                 objectInputStream.close()
@@ -253,7 +254,7 @@ class ConnectFragment : Fragment() {
             }
         }
 
-
+        // lastConnectionButton onClickListener
         lastConnectionButton.setOnClickListener {
             connectionLastDetailsConfirmation()
         }
@@ -262,10 +263,12 @@ class ConnectFragment : Fragment() {
 
 
 
+    // inner class used for setting up the connection
     inner class SetupConnection : CreateConnection<String, Void, Socket?>() {
 
         override fun doInBackground(vararg params: String?): Socket? {
 
+            // SSL certs initialization
             try {
                 val trustSt = KeyStore.getInstance("BKS")
                 val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
@@ -290,24 +293,24 @@ class ConnectFragment : Fragment() {
                 objectOutputStream = ObjectOutputStream(clientSocket!!.getOutputStream())
                 val time = System.currentTimeMillis() - startTime
                 val tag = "TCPClient"
-                Log.d(tag, "Conectat cu success! Conectarea s-a realizat in : " + time + "ms")
+                Log.d(tag, "Successfully connected! The connection was established in : " + time + "ms")
             } catch (e: KeyManagementException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             } catch (e: IOException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             } catch (e: KeyStoreException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             } catch (e: CertificateException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             } catch (e: NoSuchAlgorithmException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             } catch (e: UnrecoverableKeyException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
 
@@ -343,10 +346,12 @@ class ConnectFragment : Fragment() {
 
     }
 
+    // inner class used for setting up the connection by using the last connection details
     inner class SetupConnectionLastDetails : CreateConnectionLastDetails<String, Void, Socket?>() {
 
         override fun doInBackground(vararg params: String?): Socket? {
 
+            // SSL certs initialization
             try {
                 val trustSt = KeyStore.getInstance("BKS")
                 val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
@@ -371,30 +376,30 @@ class ConnectFragment : Fragment() {
                 objectOutputStream = ObjectOutputStream(clientSocket!!.getOutputStream())
                 val time = System.currentTimeMillis() - startTime
                 val tag = "TCPClient"
-                Log.d(tag, "Conectat cu success! Conectarea s-a realizat in : " + time + "ms")
+                Log.d(tag, "Successfully connected! The connection was established in : " + time + "ms")
             }
             catch (e: KeyManagementException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
             catch(e: IOException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
             catch(e: KeyStoreException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
             catch(e: CertificateException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
             catch(e: NoSuchAlgorithmException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
             catch(e: UnrecoverableKeyException) {
-                Log.e("ADMote", "Conectarea nu s-a realizat!", e)
+                Log.e("ADMote", "The connection with the server failed!", e)
                 clientSocket = null
             }
 
@@ -431,14 +436,15 @@ class ConnectFragment : Fragment() {
 
     }
 
-    private fun getultimeleDetaliiConexiune(): Array<String?> {
+    // 
+    private fun getLastConnectionDetails(): Array<String?> {
         val arr = arrayOfNulls<String>(2)
         arr[0] = sharedPreferences.getString("ultimulIPConectat", "N/A")
         arr[1] = sharedPreferences.getString("ultimulPortConectat", "N/A")
         return arr
     }
 
-    private fun setUltimeleDetaliiConexiune(arr: Array<String>) {
+    private fun setLastConnectionDetails(arr: Array<String>) {
         val editor = sharedPreferences.edit()
         editor.putString("ultimulIPConectat", arr[0])
         editor.putString("ultimulPortConectat", arr[1])
@@ -446,7 +452,7 @@ class ConnectFragment : Fragment() {
     }
 
 
-
+    // Google AdMob Consent - Show personalized ads
     private fun showPersonalizedAds() {
         if (mSharedPreferences.getBoolean(getString(R.string.ad_free_purchase), true)) {
             ConsentInformation.getInstance(activity).consentStatus = ConsentStatus.PERSONALIZED
@@ -458,6 +464,7 @@ class ConnectFragment : Fragment() {
         }
     }
 
+    // Google AdMob Consent - Show non-personalized ads
     private fun showNonPersonalizedAds() {
         if (mSharedPreferences.getBoolean(getString(R.string.ad_free_purchase), true)) {
             ConsentInformation.getInstance(activity).consentStatus = ConsentStatus.NON_PERSONALIZED
@@ -480,7 +487,6 @@ class ConnectFragment : Fragment() {
 
 
     // Dialog for informing member that in order to connect, the server needs to be opened on the PC/laptop
-
     private fun connectionConfirmationDialog(c: Context): AlertDialog.Builder? {
 
         val builder = AlertDialog.Builder(c, R.style.DialogTheme)
@@ -515,7 +521,6 @@ class ConnectFragment : Fragment() {
 
 
     // Dialog for informing member that in order to connect, the server needs to be opened on the PC/laptop - Last connection details
-
     private fun connectionLastDetailsConfirmationDialog(c: Context): AlertDialog.Builder? {
 
         val builder = AlertDialog.Builder(c, R.style.DialogTheme)
@@ -545,12 +550,10 @@ class ConnectFragment : Fragment() {
     private fun connectionLastDetailsConfirmation() {
         connectionLastDetailsConfirmationDialog(mContext!!)!!.show()
     }
-
     // --------End of confirmation dialog----------------------------
 
 
     // Dialog for displaying the error message and possible cause of a connection error
-
     private fun errorMessageDialog(c: Context): AlertDialog.Builder? {
 
         val builder = AlertDialog.Builder(c, R.style.DialogTheme)
@@ -592,8 +595,7 @@ class ConnectFragment : Fragment() {
 
 
 
-    // Dialog a dialog that confirms that the connection was successfully established
-
+    // Dialog that confirms that the connection was successfully established
     private fun successfullyConnectedDialog(c: Context): AlertDialog.Builder? {
 
         val builder = AlertDialog.Builder(c, R.style.DialogTheme)
@@ -610,8 +612,7 @@ class ConnectFragment : Fragment() {
         ) { dialog, id -> dialog.dismiss()
 
         }
-
-
+        
         return builder
     }
 
@@ -622,8 +623,7 @@ class ConnectFragment : Fragment() {
 // --------End of success connection dialog----------------------------
 
 
-    // Dialog a dialog that confirms that the connection was successfully reset
-
+    // Dialog that confirms that the connection was successfully reset
     private fun resetConnectionDialog(c: Context): AlertDialog.Builder? {
 
         val builder = AlertDialog.Builder(c, R.style.DialogTheme)
@@ -648,12 +648,10 @@ class ConnectFragment : Fragment() {
     private fun resetConnection() {
         resetConnectionDialog(mContext!!)!!.show()
     }
-
 // --------End of reset connection dialog----------------------------
 
 
     // Start normal and last details connection
-
     private fun startConnection() {
         setupConnection = SetupConnection()
         if (ValidateIP.validateIP(IPAddress.text.toString()) && ValidateIP.validatePort(PortTCP.text.toString())) {
@@ -698,7 +696,7 @@ class ConnectFragment : Fragment() {
 
     // ---------------------------------------------------------------------
 
-    @Suppress("DEPRECATION")
+    
     private fun visitHelpWebsite() {
         if (resources.configuration.locale.language == "ro") {
             val uri = Uri.parse("https://admotecontrol.com/ro/ajutor")
